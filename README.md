@@ -4,15 +4,14 @@ A Streamlit application that generates personalized cold emails based on job des
 
 ## Architecture
 
-[Your architecture image will go here]
-
+<img width="2161" height="1562" alt="Image" src="https://github.com/user-attachments/assets/e248adbe-6d29-4d9c-bf48-d0a8e2cd616d" />
 ## Screenshots
 
 ### Main Interface
-[Screenshot of the main Streamlit interface will go here]
+<img width="1831" height="908" alt="Image" src="https://github.com/user-attachments/assets/b706d31a-0d97-4aa2-a463-13f90f532f91" />
 
 ### Example Output
-[Screenshot of a generated email example will go here]
+<img width="1838" height="902" alt="Image" src="https://github.com/user-attachments/assets/a57be3dc-7b85-4be4-b548-6dae0a01eb75" />
 
 
 
@@ -28,7 +27,6 @@ A Streamlit application that generates personalized cold emails based on job des
 
 - Python 3.11+
 - Groq API key
-- Chrome browser (recommended for Streamlit interface)
 
 ## Installation
 
@@ -82,7 +80,7 @@ streamlit run app/main.py
 
 2. Enter a job posting URL in the input field
 
-3. Click "Submit" to generate a personalized cold email
+3. Click "Generate Email" to generate a personalized cold email
 
 The application will:
 - Extract relevant information from the job posting
