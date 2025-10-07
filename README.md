@@ -32,7 +32,7 @@ A Streamlit application that generates personalized cold emails based on job des
 
 1. Clone the repository:
 ```bash
-git clone [your-repository-url]
+git clone https://github.com/Bou-Mery/Cold-email-Gen-project.git
 cd Cold-email-Gen-project
 ```
 
