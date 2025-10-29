@@ -5,3 +5,8 @@ chromadb
 streamlit
 pandas
 python-dotenv
+beautifulsoup4
+google-search-results
+html5lib
+urllib3
+lxml
