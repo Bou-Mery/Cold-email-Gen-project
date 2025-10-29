@@ -1055,7 +1055,18 @@ def create_streamlit_app(llm, portfolio, clean_text):
 
 
 if __name__ == "__main__":
-    chain = Chain(groq_api_key=st.secrets["GROQ_API_KEY"])
+    try:
+        if "GROQ_API_KEY" not in st.secrets:
+            st.error("❌ GROQ_API_KEY manquante. Configurez-la dans Streamlit Secrets.")
+            st.stop()
+        
+        chain = Chain(groq_api_key=st.secrets["GROQ_API_KEY"])
+        portfolio = Portfolio()
+        
+        create_streamlit_app(chain, portfolio, clean_text)
+        
+    except Exception as e:
+        st.error(f"❌ Erreur de démarrage: {str(e)}")
     portfolio = Portfolio()
     
     st.set_page_config(
