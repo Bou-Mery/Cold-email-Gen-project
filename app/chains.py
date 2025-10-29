@@ -9,48 +9,42 @@ import json
 
 load_dotenv()
 
+#groq_api_key = os.getenv("GROQ_API_KEY")
+
 class Chain:
-    def __init__(self, groq_api_key: str = None):
-        """
-        Initialise la chaîne avec une clé API Groq.
-        
-        Args:
-            groq_api_key (str): Clé API Groq. Si None, cherche dans les variables d'environnement.
-        """
-        # Méthode 1: Clé passée en paramètre
-        if groq_api_key:
+    def __init__(self , groq_api_key: str = None):
+        # Method 1: Direct parameter
+        if groq_api_key and groq_api_key.strip():
             self.groq_api_key = groq_api_key.strip()
-        # Méthode 2: Variable d'environnement
-        elif os.getenv("GROQ_API_KEY"):
+            print("✅ API Key from direct parameter")
+        
+        # Method 2: Streamlit Secrets (DEPLOYMENT)
+        elif hasattr(st, 'secrets') and "GROQ_API_KEY" in st.secrets and st.secrets["GROQ_API_KEY"].strip():
+            self.groq_api_key = st.secrets["GROQ_API_KEY"].strip()
+            print("✅ API Key from Streamlit Secrets (deployment)")
+        
+        # Method 3: Environment variable (LOCAL)
+        elif os.getenv("GROQ_API_KEY") and os.getenv("GROQ_API_KEY").strip():
             self.groq_api_key = os.getenv("GROQ_API_KEY").strip()
+            print("✅ API Key from .env (local)")
+        
+        # No method found
         else:
             raise ValueError(
-                "Clé API Groq non fournie. "
-                "Soit passez-la en paramètre, soit définissez la variable d'environnement GROQ_API_KEY."
+                "❌ Groq API Key not found.\n\n"
+                "LOCALLY: Create a .env file with GROQ_API_KEY=your_key\n"
+                "IN DEPLOYMENT: Add GROQ_API_KEY to Streamlit Secrets"
             )
         
-        # Validation de la clé
+        # Validation
         if not self.groq_api_key:
-            raise ValueError("La clé API Groq est vide")
+            raise ValueError("Groq API Key is empty")
         
-        if len(self.groq_api_key) < 20:
-            print(f"⚠️ Attention: Clé API très courte ({len(self.groq_api_key)} caractères)")
-        
-        # Initialisation des modèles
-        self.llm = ChatGroq(
-            temperature=0, 
-            groq_api_key=self.groq_api_key, 
-            model_name="llama-3.1-8b-instant"  # Utilisez model_name au lieu de model
-        )
-        
-        self.creative_llm = ChatGroq(
-            temperature=0.7, 
-            groq_api_key=self.groq_api_key, 
-            model_name="llama-3.1-8b-instant"  # Utilisez model_name au lieu de model
-        )
+        print(f"🔑 Key loaded ({len(self.groq_api_key)} characters)")
 
-    # ... TOUTES VOS AUTRES MÉTHODES RESTENT IDENTIQUES ...
-    # (extract_jobs, detect_style, research_company, generate_email_variations, etc.)
+        
+        self.llm = ChatGroq(temperature=0, groq_api_key=groq_api_key, model="llama-3.1-8b-instant")
+        self.creative_llm = ChatGroq(temperature=0.7, groq_api_key=groq_api_key, model="llama-3.1-8b-instant")
 
     def extract_jobs(self, cleaned_text):
         """
@@ -91,6 +85,7 @@ class Chain:
             print("Error parsing JSON:", e)
             res = {}
         return res
+    
 
     def detect_style(self, job_description):
         """
