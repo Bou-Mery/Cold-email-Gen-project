@@ -1053,21 +1053,54 @@ def create_streamlit_app(llm, portfolio, clean_text):
     , unsafe_allow_html=True)
 
 
-
-if __name__ == "__main__":
+def initialize_app():
+    """Initialize app for both environments"""
+    
+    # Debug info
+    st.sidebar.title("🔧 Environment")
+    
+    # Check where we are running
+    if 'HOSTNAME' in os.environ and 'streamlit' in os.environ['HOSTNAME']:
+        st.sidebar.info("🌐 Running in Streamlit Cloud")
+        environment = "DEPLOYMENT"
+    else:
+        st.sidebar.info("💻 Running locally")
+        environment = "LOCAL"
+    
     try:
-        if "GROQ_API_KEY" not in st.secrets:
-            st.error("❌ GROQ_API_KEY manquante. Configurez-la dans Streamlit Secrets.")
-            st.stop()
-        
-        chain = Chain(groq_api_key=st.secrets["GROQ_API_KEY"])
+        # Initialize components
+        chain = Chain()
         portfolio = Portfolio()
         
-        create_streamlit_app(chain, portfolio, clean_text)
+        st.sidebar.success("✅ Components initialized")
+        return chain, portfolio
         
     except Exception as e:
-        st.error(f"❌ Erreur de démarrage: {str(e)}")
-    portfolio = Portfolio()
+        st.error(f"❌ Initialization error: {str(e)}")
+        
+        # Show specific help based on environment
+        if environment == "LOCAL":
+            st.info("""
+            **Local Setup:**
+            1. Create a `.env` file in your project root
+            2. Add: `GROQ_API_KEY=your_groq_key_here`
+            3. Restart the application
+            """)
+        else:
+            st.info("""
+            **Deployment Setup:**
+            1. Go to Streamlit Cloud → Settings → Secrets
+            2. Add: `GROQ_API_KEY = "your_groq_key_here"`
+            3. Redeploy the application
+            """)
+        
+        return None, None
+
+if __name__ == "__main__":
+    #chain = Chain()
+    #portfolio = Portfolio()
+
+    chain, portfolio = initialize_app()
     
     st.set_page_config(
         layout="wide",
