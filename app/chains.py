@@ -9,14 +9,48 @@ import json
 
 load_dotenv()
 
-os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"].strip()
-groq_api_key = os.getenv("GROQ_API_KEY")
-
-
 class Chain:
-    def __init__(self):
-        self.llm = ChatGroq(temperature=0, groq_api_key=groq_api_key, model="llama-3.1-8b-instant")
-        self.creative_llm = ChatGroq(temperature=0.7, groq_api_key=groq_api_key, model="llama-3.1-8b-instant")
+    def __init__(self, groq_api_key: str = None):
+        """
+        Initialise la chaîne avec une clé API Groq.
+        
+        Args:
+            groq_api_key (str): Clé API Groq. Si None, cherche dans les variables d'environnement.
+        """
+        # Méthode 1: Clé passée en paramètre
+        if groq_api_key:
+            self.groq_api_key = groq_api_key.strip()
+        # Méthode 2: Variable d'environnement
+        elif os.getenv("GROQ_API_KEY"):
+            self.groq_api_key = os.getenv("GROQ_API_KEY").strip()
+        else:
+            raise ValueError(
+                "Clé API Groq non fournie. "
+                "Soit passez-la en paramètre, soit définissez la variable d'environnement GROQ_API_KEY."
+            )
+        
+        # Validation de la clé
+        if not self.groq_api_key:
+            raise ValueError("La clé API Groq est vide")
+        
+        if len(self.groq_api_key) < 20:
+            print(f"⚠️ Attention: Clé API très courte ({len(self.groq_api_key)} caractères)")
+        
+        # Initialisation des modèles
+        self.llm = ChatGroq(
+            temperature=0, 
+            groq_api_key=self.groq_api_key, 
+            model_name="llama-3.1-8b-instant"  # Utilisez model_name au lieu de model
+        )
+        
+        self.creative_llm = ChatGroq(
+            temperature=0.7, 
+            groq_api_key=self.groq_api_key, 
+            model_name="llama-3.1-8b-instant"  # Utilisez model_name au lieu de model
+        )
+
+    # ... TOUTES VOS AUTRES MÉTHODES RESTENT IDENTIQUES ...
+    # (extract_jobs, detect_style, research_company, generate_email_variations, etc.)
 
     def extract_jobs(self, cleaned_text):
         """
@@ -57,7 +91,6 @@ class Chain:
             print("Error parsing JSON:", e)
             res = {}
         return res
-    
 
     def detect_style(self, job_description):
         """
