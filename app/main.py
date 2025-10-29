@@ -1053,60 +1053,27 @@ def create_streamlit_app(llm, portfolio, clean_text):
     , unsafe_allow_html=True)
 
 
+
 def initialize_app():
-    """Initialize app for both environments"""
-    
-    # Debug info
-    st.sidebar.title("🔧 Environment")
-    
-    # Check where we are running
-    if 'HOSTNAME' in os.environ and 'streamlit' in os.environ['HOSTNAME']:
-        st.sidebar.info("🌐 Running in Streamlit Cloud")
-        environment = "DEPLOYMENT"
-    else:
-        st.sidebar.info("💻 Running locally")
-        environment = "LOCAL"
-    
+    st.sidebar.title("Environment")
+    st.sidebar.info("Running in Streamlit Cloud")
+
     try:
-        # Initialize components
         chain = Chain()
-        portfolio = Portfolio()
-        
-        st.sidebar.success("✅ Components initialized")
+        portfolio = Portfolio() 
+        st.sidebar.success("Components initialized")
         return chain, portfolio
-        
     except Exception as e:
-        st.error(f"❌ Initialization error: {str(e)}")
-        
-        # Show specific help based on environment
-        if environment == "LOCAL":
-            st.info("""
-            **Local Setup:**
-            1. Create a `.env` file in your project root
-            2. Add: `GROQ_API_KEY=your_groq_key_here`
-            3. Restart the application
-            """)
-        else:
-            st.info("""
-            **Deployment Setup:**
-            1. Go to Streamlit Cloud → Settings → Secrets
-            2. Add: `GROQ_API_KEY = "your_groq_key_here"`
-            3. Redeploy the application
-            """)
-        
+        st.error(f"Initialization error: {e}")
+        st.info("Add GROQ_API_KEY in Secrets")
         return None, None
 
 if __name__ == "__main__":
-    #chain = Chain()
-    #portfolio = Portfolio()
-
     chain, portfolio = initialize_app()
-    
-    st.set_page_config(
-        layout="wide",
-        page_title="AI Cold Email Generator V3",
-        page_icon="🚀",
-        initial_sidebar_state="collapsed"
-    )
-    
+
+    if chain is None or portfolio is None:
+        st.error("App failed to start. Check logs.")
+        st.stop()
+
+    st.set_page_config(page_title="AI Cold Email", layout="wide")
     create_streamlit_app(chain, portfolio, clean_text)
