@@ -1055,7 +1055,7 @@ def create_streamlit_app(llm, portfolio, clean_text):
 
 
 if __name__ == "__main__":
-    chain = Chain()
+    chain = Chain(groq_api_key=st.secrets["GROQ_API_KEY"])
     portfolio = Portfolio()
     
     st.set_page_config(
