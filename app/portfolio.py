@@ -43,13 +43,27 @@ class Portfolio:
         """
         V2 FEATURE: Load portfolio into ChromaDB vector store.
         """
-        if not self.collection.count():
-            for _, row in self.data.iterrows():
-                self.collection.add(
-                    documents=[row['TechStack']],
-                    metadatas=[{"link": row['Portfolio_Link']}],
-                    ids=[str(uuid.uuid4())]
-                )
+        try:
+            if self.data.empty:
+                st.warning("⚠️ No portfolio data to load")
+                return
+                
+            if self.collection and not self.collection.count():
+                for _, row in self.data.iterrows():
+                    self.collection.add(
+                        documents=[str(row['TechStack'])],
+                        metadatas=[{
+                            "url": str(row['Portfolio_Link']),
+                            "tech_stack": str(row['TechStack'])
+                        }],
+                        ids=[str(uuid.uuid4())]
+                    )
+                st.sidebar.success("✅ Portfolio loaded into vector database")
+            else:
+                st.sidebar.info("ℹ️ Portfolio already loaded or collection unavailable")
+                
+        except Exception as e:
+            st.error(f"❌ Error loading portfolio to vector DB: {str(e)}")
 
     
     def query_links(self, skills):
