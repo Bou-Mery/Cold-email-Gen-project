@@ -1060,7 +1060,7 @@ def initialize_app():
     st.sidebar.title("🔧 Environment")
     
     # Check where we are running
-    if 'HOSTNAME' in os.environ and 'streamlit' in os.environ['HOSTNAME']:
+    if 'HOSTNAME' in os.environ and 'streamlit' in os.environ.get('HOSTNAME', ''):
         st.sidebar.info("🌐 Running in Streamlit Cloud")
         environment = "DEPLOYMENT"
     else:
@@ -1071,6 +1071,9 @@ def initialize_app():
         # Initialize components
         chain = Chain()
         portfolio = Portfolio()
+        
+        # Load portfolio data
+        portfolio.load_portfolio()
         
         st.sidebar.success("✅ Components initialized")
         return chain, portfolio
@@ -1096,17 +1099,23 @@ def initialize_app():
         
         return None, None
 
-if __name__ == "__main__":
-    #chain = Chain()
-    #portfolio = Portfolio()
+def main():
+    """Main application entry point"""
+    try:
+        # Initialize components
+        chain, portfolio = initialize_app()
+        
+        # If initialization failed, show error and stop
+        if chain is None or portfolio is None:
+            st.error("❌ Application failed to initialize. Please check the configuration above.")
+            return
+        
+        # Create the app
+        create_streamlit_app(chain, portfolio, clean_text)
+        
+    except Exception as e:
+        st.error(f"❌ Application error: {str(e)}")
+        st.stop()
 
-    chain, portfolio = initialize_app()
-    
-    st.set_page_config(
-        layout="wide",
-        page_title="AI Cold Email Generator V3",
-        page_icon="🚀",
-        initial_sidebar_state="collapsed"
-    )
-    
-    create_streamlit_app(chain, portfolio, clean_text)
+if __name__ == "__main__":
+    main()
