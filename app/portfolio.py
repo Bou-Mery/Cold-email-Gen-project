@@ -4,6 +4,7 @@ import uuid
 import os
 from typing import List, Dict
 import re
+import streamlit as st
 
 class Portfolio:
     def __init__(self, file_path="app/rsrc/links_portfolio.csv"):
