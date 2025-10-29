@@ -9,7 +9,9 @@ import json
 
 load_dotenv()
 
+os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"].strip()
 groq_api_key = os.getenv("GROQ_API_KEY")
+
 
 class Chain:
     def __init__(self):
