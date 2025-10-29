@@ -8,66 +8,36 @@ import re
 class Portfolio:
     def __init__(self, file_path="app/rsrc/links_portfolio.csv"):
         self.file_path = file_path
+        self.data = pd.read_csv(self.file_path)
         
-        try:
-            # Try to load the CSV file
-            self.data = pd.read_csv(self.file_path)
-            print(f"✅ Portfolio CSV loaded: {len(self.data)} projects")
-        except Exception as e:
-            print(f"❌ Error loading portfolio CSV from {self.file_path}: {str(e)}")
-            # Create empty dataframe as fallback
-            self.data = pd.DataFrame(columns=['TechStack', 'Portfolio_Link'])
-            print("⚠️ Using empty portfolio - some features will be limited")
+        # Ensure the vector_db directory exists
+        db_path = "vector_db"
+        os.makedirs(db_path, exist_ok=True)
         
-        try:
-            # Ensure the vector_db directory exists
-            db_path = "vector_db"
-            os.makedirs(db_path, exist_ok=True)
-            
-            # Initialize the ChromaDB client with the path
-            self.client = chromadb.PersistentClient(path=db_path)
-            self.collection = self.client.get_or_create_collection(name="portfolio_collection")
-            print("✅ ChromaDB initialized")
-            
-        except Exception as e:
-            print(f"❌ Error initializing ChromaDB: {str(e)}")
-            self.client = None
-            self.collection = None
+        # Initialize the ChromaDB client with the path
+        self.client = chromadb.PersistentClient(path=db_path)
+        self.collection = self.client.get_or_create_collection(name="portfolio_collection")
         
-        # Cache for extracted skills
+        # 🆕 V3: Cache for extracted skills
         self._skills_cache = None
-        
+
     
     def load_portfolio(self):
         """
-        Load portfolio into ChromaDB vector store.
+        V2 FEATURE: Load portfolio into ChromaDB vector store.
         """
-        try:
-            if self.data.empty:
-                print("⚠️ No portfolio data to load")
-                return
-                
-            if self.collection and not self.collection.count():
-                for _, row in self.data.iterrows():
-                    self.collection.add(
-                        documents=[str(row['TechStack'])],
-                        metadatas=[{
-                            "url": str(row['Portfolio_Link']),
-                            "tech_stack": str(row['TechStack'])
-                        }],
-                        ids=[str(uuid.uuid4())]
-                    )
-                print("✅ Portfolio loaded into vector database")
-            else:
-                print("ℹ️ Portfolio already loaded or collection unavailable")
-                
-        except Exception as e:
-            print(f"❌ Error loading portfolio to vector DB: {str(e)}")
+        if not self.collection.count():
+            for _, row in self.data.iterrows():
+                self.collection.add(
+                    documents=[row['TechStack']],
+                    metadatas=[{"link": row['Portfolio_Link']}],
+                    ids=[str(uuid.uuid4())]
+                )
 
     
     def query_links(self, skills):
         """
-        Query relevant portfolio links based on skills.
+        V2 FEATURE: Query relevant portfolio links based on skills.
         
         Args:
             skills (str): Skills string to match against
@@ -75,9 +45,6 @@ class Portfolio:
         Returns:
             list: Matching portfolio metadata
         """
-        if not self.collection:
-            return []
-            
         return self.collection.query(
             query_texts=[skills],
             n_results=2
@@ -86,7 +53,7 @@ class Portfolio:
     
     def extract_all_skills(self) -> List[str]:
         """
-        Extract all unique skills from portfolio.
+        🆕 V3 FEATURE: Extract all unique skills from portfolio.
         
         Returns:
             list: Sorted list of unique skills/technologies
@@ -120,10 +87,16 @@ class Portfolio:
     
     def get_skill_categories(self) -> Dict[str, List[str]]:
         """
-        Categorize skills by domain.
+        🆕 V3 FEATURE: Categorize skills by domain.
         
         Returns:
-            dict: Categorized skills
+            dict: {
+                "languages": [...],
+                "frameworks": [...],
+                "databases": [...],
+                "cloud": [...],
+                "tools": [...]
+            }
         """
         all_skills = self.extract_all_skills()
         
@@ -172,7 +145,7 @@ class Portfolio:
     
     def get_top_skills(self, top_n: int = 10) -> List[str]:
         """
-        Get most frequently mentioned skills.
+        🆕 V3 FEATURE: Get most frequently mentioned skills.
         
         Args:
             top_n (int): Number of top skills to return
@@ -196,13 +169,13 @@ class Portfolio:
     
     def find_projects_by_skill(self, skill: str) -> List[Dict]:
         """
-        Find portfolio projects that use a specific skill.
+        🆕 V3 FEATURE: Find portfolio projects that use a specific skill.
         
         Args:
             skill (str): Skill to search for
             
         Returns:
-            list: Matching projects
+            list: [{"tech_stack": str, "link": str}]
         """
         matching_projects = []
         skill_lower = skill.lower()
@@ -221,13 +194,18 @@ class Portfolio:
     
     def suggest_skills_for_job(self, job_skills: List[str]) -> Dict:
         """
-        Analyze match between job requirements and portfolio.
+        🆕 V3 FEATURE: Analyze match between job requirements and portfolio.
         
         Args:
             job_skills (list): Required skills from job posting
             
         Returns:
-            dict: Match analysis
+            dict: {
+                "matching_skills": [...],
+                "missing_skills": [...],
+                "match_percentage": float,
+                "relevant_projects": [...]
+            }
         """
         portfolio_skills = [s.lower() for s in self.extract_all_skills()]
         job_skills_lower = [s.lower() for s in job_skills]
@@ -241,9 +219,9 @@ class Portfolio:
         
         # Find relevant projects
         relevant_projects = []
-        for skill in matching[:3]:
+        for skill in matching[:3]:  # Top 3 matching skills
             projects = self.find_projects_by_skill(skill)
-            relevant_projects.extend(projects[:2])
+            relevant_projects.extend(projects[:2])  # Max 2 projects per skill
         
         # Remove duplicates
         unique_projects = []
@@ -257,13 +235,13 @@ class Portfolio:
             "matching_skills": matching,
             "missing_skills": missing,
             "match_percentage": round(match_pct, 1),
-            "relevant_projects": unique_projects[:4]
+            "relevant_projects": unique_projects[:4]  # Max 4 projects
         }
     
     
     def get_portfolio_summary(self) -> Dict:
         """
-        Get comprehensive portfolio statistics.
+        🆕 V3 FEATURE: Get comprehensive portfolio statistics.
         
         Returns:
             dict: Portfolio analytics and summary
@@ -288,7 +266,7 @@ class Portfolio:
     
     def export_skills_list(self, output_file: str = "portfolio_skills.txt"):
         """
-        Export all skills to a text file.
+        🆕 V3 FEATURE: Export all skills to a text file.
         
         Args:
             output_file (str): Output file path
@@ -307,47 +285,3 @@ class Portfolio:
                         f.write(f"  - {skill}\n")
         
         print(f"✅ Skills exported to {output_file}")
-
-
-# Testing
-if __name__ == "__main__":
-    print("=== Testing Portfolio Features ===\n")
-    
-    portfolio = Portfolio()
-    portfolio.load_portfolio()
-    
-    # Test 1: Extract all skills
-    print("1. All Skills:")
-    skills = portfolio.extract_all_skills()
-    print(f"   Total skills: {len(skills)}")
-    print(f"   Sample: {skills[:5]}")
-    
-    # Test 2: Skill categories
-    print("\n2. Skill Categories:")
-    categories = portfolio.get_skill_categories()
-    for cat, skills in categories.items():
-        if skills:
-            print(f"   {cat}: {len(skills)} skills")
-    
-    # Test 3: Top skills
-    print("\n3. Top 5 Skills:")
-    top = portfolio.get_top_skills(5)
-    for i, skill in enumerate(top, 1):
-        print(f"   {i}. {skill}")
-    
-    # Test 4: Job matching
-    print("\n4. Job Match Analysis:")
-    job_skills = ["Python", "TensorFlow", "AWS", "Docker", "Nonexistent"]
-    match = portfolio.suggest_skills_for_job(job_skills)
-    print(f"   Match: {match['match_percentage']}%")
-    print(f"   Matching: {match['matching_skills']}")
-    print(f"   Missing: {match['missing_skills']}")
-    
-    # Test 5: Portfolio summary
-    print("\n5. Portfolio Summary:")
-    summary = portfolio.get_portfolio_summary()
-    print(f"   Projects: {summary['total_projects']}")
-    print(f"   Skills: {summary['total_skills']}")
-    print(f"   Top: {', '.join(summary['top_skills'][:3])}")
-    
-    print("\n✅ All portfolio tests completed!")
