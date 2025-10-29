@@ -9,19 +9,35 @@ import streamlit as st
 class Portfolio:
     def __init__(self, file_path="app/rsrc/links_portfolio.csv"):
         self.file_path = file_path
-        self.data = pd.read_csv(self.file_path)
         
-        # Ensure the vector_db directory exists
-        db_path = "vector_db"
-        os.makedirs(db_path, exist_ok=True)
+        try:
+            # Try to load the CSV file
+            self.data = pd.read_csv(self.file_path)
+            st.sidebar.success(f"✅ Portfolio CSV loaded: {len(self.data)} projects")
+        except Exception as e:
+            st.error(f"❌ Error loading portfolio CSV from {self.file_path}: {str(e)}")
+            # Create empty dataframe as fallback
+            self.data = pd.DataFrame(columns=['TechStack', 'Portfolio_Link'])
+            st.warning("⚠️ Using empty portfolio - some features will be limited")
         
-        # Initialize the ChromaDB client with the path
-        self.client = chromadb.PersistentClient(path=db_path)
-        self.collection = self.client.get_or_create_collection(name="portfolio_collection")
+        try:
+            # Ensure the vector_db directory exists
+            db_path = "vector_db"
+            os.makedirs(db_path, exist_ok=True)
+            
+            # Initialize the ChromaDB client with the path
+            self.client = chromadb.PersistentClient(path=db_path)
+            self.collection = self.client.get_or_create_collection(name="portfolio_collection")
+            st.sidebar.success("✅ ChromaDB initialized")
+            
+        except Exception as e:
+            st.error(f"❌ Error initializing ChromaDB: {str(e)}")
+            self.client = None
+            self.collection = None
         
         # 🆕 V3: Cache for extracted skills
         self._skills_cache = None
-
+        
     
     def load_portfolio(self):
         """
