@@ -13,6 +13,20 @@ load_dotenv()
 
 class Chain:
     def __init__(self , groq_api_key: str = None):
+import os
+import streamlit as st  # ← AJOUTEZ CETTE LIGNE
+from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.exceptions import OutputParserException
+from dotenv import load_dotenv
+from typing import Dict, List
+import json
+
+load_dotenv()
+
+class Chain:
+    def __init__(self, groq_api_key: str = None):
         # Method 1: Direct parameter
         if groq_api_key and groq_api_key.strip():
             self.groq_api_key = groq_api_key.strip()
@@ -40,8 +54,7 @@ class Chain:
         if not self.groq_api_key:
             raise ValueError("Groq API Key is empty")
         
-        print(f"🔑 Key loaded ({len(self.groq_api_key)} characters)")
-
+        print(f"🔑 Key loaded ({len(self.groq_api_key)}
         
         self.llm = ChatGroq(temperature=0, groq_api_key=groq_api_key, model="llama-3.1-8b-instant")
         self.creative_llm = ChatGroq(temperature=0.7, groq_api_key=groq_api_key, model="llama-3.1-8b-instant")
