@@ -178,8 +178,6 @@ A live demo is available here 👉 [https://cold-email-gen3.streamlit.app](https
 ## 🎥 Demo Video
 
 🎬 **Watch the complete workflow:**
-## 🎬 Demo Video
-## 🎬 Demo Video
 
 [Watch Demo Video](https://drive.google.com/file/d/1PKOT9sFqyi_v6JJ22dAuPrxD_VYlpXkl/view?usp=sharing)
 
